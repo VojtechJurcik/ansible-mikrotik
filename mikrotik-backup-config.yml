@@ -1,30 +1,46 @@
 ---
-# An Ansible Playbook to backup the Mikrotik device's configuration to both script and backup file
-# Version 1 - 07/01/2017
-#
-# ansible.cfg
-# [paramiko_connection]
-# pty=False
-#
-- name: Mikrotik Backup Device Configuration
-  hosts: mikrotik
-  vars:
-    ftpserver_var: speedtest.tele2.net
-    ftpuser_var: anonymous
-    ftppass_var: 
+# An Ansible Playbook to backup the Mikrotik device's configuration to file
+# Version 2 - 31/12/2010
 
-  connection: paramiko
-  user: admin
+# By Vojtech Jurcik
+# Many thanks to loesberg.com 
+---
+################
+### RouterOS ###
+################
+- name: Get config from all Mikrotik RouterOS devices
+  hosts: router
+  connection: network_cli
   gather_facts: no
   tasks:
-   - name: Performing backup of Mikrotik to local storage
-     raw: /system backup save name {{inventory_hostname}}
+    - name: Collect system package print detail output
+      routeros_command:
+        commands: system package print detail without-paging
 
-   - name: Exporting current configuration to text
-     raw: /export file={{inventory_hostname}}
+      register: SYSPKGDTL
 
-   - name: FTP backup file
-     raw: /tool fetch address={{ftpserver_var}} src-path={{inventory_hostname}}.backup user={{ftpuser_var}} mode=ftp dst-path=/upload/{{inventory_hostname}}.backup upload=yes
+    - name: Collect system routerboard print output
+      routeros_command:
+        commands: system routerboard print
 
-   - name: FTP export config
-     raw: /tool fetch address={{ftpserver_var}} src-path={{inventory_hostname}}.rsc user={{ftpuser_var}} mode=ftp dst-path=/upload/{{inventory_hostname}}.rsc upload=yes
+      register: SYSRTRBRD
+
+    - name: Collect system license print output
+      routeros_command:
+        commands: system license print
+
+      register: SYSLIC
+
+    - name: Export configuration commands
+      routeros_command:
+        commands: export
+
+      register: EXPORT
+
+    - set_fact: time="{{lookup('pipe','date \"+%Y-%m-%d-%H-%M\"')}}"
+
+    - name: save output to a file
+      connection: local
+      copy:
+        content="===system package print detail===\n{{ SYSPKGDTL.stdout|join('\n') }}\n===system routerboard print===\n{{ SYSRTRBRD.stdout|join('\n') }}\n===system license print===\n{{ SYSLIC.stdout|join('\n') }}\n===export configuration===\n{{ EXPORT.stdout|join('\n') }}\n"
+        dest="~/backups/mikrotik/{{ inventory_hostname }}_run_cfg_{{ time }}.txt"

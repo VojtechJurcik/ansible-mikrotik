@@ -1,0 +1,2 @@
+[router]
+main ansible_ssh_host=mikrotik_ip ansible_ssh_user=admin ansible_ssh_pass=admin_passwd ansible_network_os=routeros

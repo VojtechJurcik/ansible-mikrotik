@@ -42,4 +42,4 @@
       connection: local
       copy:
         content="===system package print detail===\n{{ SYSPKGDTL.stdout|join('\n') }}\n===system routerboard print===\n{{ SYSRTRBRD.stdout|join('\n') }}\n===system license print===\n{{ SYSLIC.stdout|join('\n') }}\n===export configuration===\n{{ EXPORT.stdout|join('\n') }}\n"
-        dest="~/backups/mikrotik/{{ inventory_hostname }}_run_cfg_{{ time }}.txt"
+        dest="<desired_path>{{ inventory_hostname }}_run_cfg_{{ time }}.txt"

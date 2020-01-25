@@ -9,7 +9,7 @@
 ################
 
 - name: Mikrotik Update
-  hosts: routers
+  hosts: router
   serial: 1
   connection: network_cli 
   user: admin
